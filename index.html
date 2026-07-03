@@ -3,17 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Screeny</title>
+    <title>Recodify Screeny</title>
+    <link rel="icon" type="image/png" href="assets/rocket-mark.png">
     <link rel="stylesheet" href="styles.css">
     <script type="module" src="app.js"></script>
   </head>
   <body>
     <main class="shell" aria-labelledby="app-title">
+      <header class="brand-bar" aria-label="Recodify Utilities">
+        <img class="brand-wordmark" src="assets/recodify-utilities.png" alt="Recodify Utilities">
+      </header>
+
       <section class="recorder" aria-describedby="status-text">
         <div class="masthead">
           <div>
-            <p class="eyebrow">Local recorder</p>
+            <p class="eyebrow">Recodify capture utility</p>
             <h1 id="app-title">Screeny</h1>
+            <p class="lede">Local Chrome screen and audio capture, ready for fast `.webm` handoff.</p>
           </div>
           <output id="timer" class="timer" aria-live="off">00:00</output>
         </div>

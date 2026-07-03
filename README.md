@@ -1,6 +1,8 @@
 # Screeny
 
-Barebones Chrome screen recorder for local `.webm` captures.
+![Recodify Utilities](assets/recodify-utilities.png)
+
+Barebones Chrome screen recorder from the Recodify Utilities set, built for local `.webm` captures.
 
 ## Features
 
