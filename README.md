@@ -4,6 +4,7 @@
 
 Barebones Chrome screen recorder from the Recodify Utilities set, built for local `.webm` captures.
 
+![alt text](image.png)
 ## Features
 
 - Screen recording.
