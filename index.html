@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Screeny</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <main class="shell" aria-labelledby="app-title">
+      <section class="recorder" aria-describedby="status-text">
+        <div class="masthead">
+          <div>
+            <p class="eyebrow">Local recorder</p>
+            <h1 id="app-title">Screeny</h1>
+          </div>
+          <output id="timer" class="timer" aria-live="off">00:00</output>
+        </div>
+
+        <fieldset class="mode-group">
+          <legend>Audio mode</legend>
+          <div class="mode-grid">
+            <label class="mode-option">
+              <input type="radio" name="audioMode" value="screen" checked>
+              <span>Screen only</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="audioMode" value="mic">
+              <span>Screen + mic</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="audioMode" value="system">
+              <span>Screen + system</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="audioMode" value="mic-system">
+              <span>Mic + system</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="controls">
+          <button id="record-toggle" class="primary-button" type="button" title="Shortcut: R">
+            Start
+          </button>
+          <button id="pause-toggle" class="secondary-button" type="button" title="Shortcut: P" disabled>
+            Pause
+          </button>
+          <a id="download-link" class="download-button is-hidden" download>Download</a>
+        </div>
+
+        <div class="status-row">
+          <span id="status-dot" class="status-dot" aria-hidden="true"></span>
+          <output id="status-text" aria-live="polite">Ready</output>
+        </div>
+
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+  </body>
+</html>
