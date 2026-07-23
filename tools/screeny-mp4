@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly PROGRAM_NAME=${0##*/}
+
+temporary_directory=""
+temporary_output=""
+
+print_usage() {
+  cat <<EOF
+Usage: $PROGRAM_NAME INPUT.webm [OUTPUT.mp4]
+
+Convert a Screeny WebM recording to a SharePoint-compatible MP4.
+
+When OUTPUT is omitted, the input's final extension is replaced with .mp4.
+Existing output files are never overwritten.
+EOF
+}
+
+fail() {
+  printf '%s: %s\n' "$PROGRAM_NAME" "$1" >&2
+  exit 1
+}
+
+cleanup() {
+  if [ -n "$temporary_output" ] && { [ -e "$temporary_output" ] || [ -L "$temporary_output" ]; }; then
+    rm -f "$temporary_output"
+  fi
+
+  if [ -n "$temporary_directory" ] && [ -d "$temporary_directory" ]; then
+    rmdir "$temporary_directory" 2>/dev/null || true
+  fi
+}
+
+derive_output_path() {
+  local input_path=$1
+  local input_directory
+  local input_name
+  local input_stem
+
+  if [[ "$input_path" == */* ]]; then
+    input_directory=${input_path%/*}
+    input_name=${input_path##*/}
+
+    if [ -z "$input_directory" ]; then
+      input_directory="/"
+    fi
+  else
+    input_directory=""
+    input_name=$input_path
+  fi
+
+  if [[ "$input_name" == *.* ]] && [ -n "${input_name%.*}" ]; then
+    input_stem=${input_name%.*}
+  else
+    input_stem=$input_name
+  fi
+
+  if [ -n "$input_directory" ]; then
+    printf '%s/%s.mp4\n' "${input_directory%/}" "$input_stem"
+  else
+    printf '%s.mp4\n' "$input_stem"
+  fi
+}
+
+if [ "$#" -eq 1 ] && { [ "$1" = "--help" ] || [ "$1" = "-h" ]; }; then
+  print_usage
+  exit 0
+fi
+
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  print_usage >&2
+  exit 2
+fi
+
+command -v ffmpeg >/dev/null 2>&1 || fail "ffmpeg is required but was not found in PATH."
+command -v mktemp >/dev/null 2>&1 || fail "mktemp is required but was not found in PATH."
+
+input=$1
+
+if [[ "$input" == -* ]]; then
+  input="./$input"
+fi
+
+[ -f "$input" ] || fail "input is not a regular file: $input"
+[ -r "$input" ] || fail "input is not readable: $input"
+
+if [ "$#" -eq 2 ]; then
+  output=$2
+else
+  output=$(derive_output_path "$input")
+fi
+
+if [[ "$output" == -* ]]; then
+  output="./$output"
+fi
+
+[ "$input" != "$output" ] || fail "input and output paths must be different."
+
+case "$output" in
+  *.[mM][pP]4) ;;
+  *) fail "output path must end in .mp4: $output" ;;
+esac
+
+if [ -e "$output" ] || [ -L "$output" ]; then
+  fail "output already exists: $output"
+fi
+
+if [[ "$output" == */* ]]; then
+  output_directory=${output%/*}
+
+  if [ -z "$output_directory" ]; then
+    output_directory="/"
+  fi
+else
+  output_directory="."
+fi
+
+[ -d "$output_directory" ] || fail "output directory does not exist: $output_directory"
+
+if ! temporary_directory=$(mktemp -d "$output_directory/.screeny-mp4.XXXXXX"); then
+  fail "could not create a temporary directory beside the output."
+fi
+
+temporary_output="$temporary_directory/output.mp4"
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+ffmpeg \
+  -hide_banner \
+  -nostdin \
+  -n \
+  -i "$input" \
+  -map 0:v:0 \
+  -map '0:a:0?' \
+  -vf 'fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2' \
+  -c:v libx264 \
+  -preset fast \
+  -crf 21 \
+  -pix_fmt yuv420p \
+  -c:a aac \
+  -b:a 128k \
+  -movflags +faststart \
+  "$temporary_output"
+
+[ -s "$temporary_output" ] || fail "ffmpeg completed without producing a non-empty MP4."
+
+if [ -e "$output" ] || [ -L "$output" ]; then
+  fail "output appeared during conversion and was not overwritten: $output"
+fi
+
+if ! mv -n "$temporary_output" "$output"; then
+  fail "could not move the completed MP4 into place: $output"
+fi
+
+if [ -e "$temporary_output" ] || [ -L "$temporary_output" ]; then
+  fail "output appeared during conversion and was not overwritten: $output"
+fi
+
+printf 'Created %s\n' "$output"

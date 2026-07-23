@@ -52,6 +52,47 @@ Open:
 http://localhost:8765/
 ```
 
+## Convert For SharePoint
+
+Screeny records `.webm` files using the browser's native encoder. Use the
+repository-local conversion tool to create a conventional H.264/AAC MP4 for
+SharePoint or Microsoft 365:
+
+```bash
+./tools/screeny-mp4 screeny-2026-07-23T10-30-00.webm
+```
+
+By default, the MP4 is written beside the input with the final extension
+replaced:
+
+```text
+screeny-2026-07-23T10-30-00.mp4
+```
+
+Pass a second path to choose the output:
+
+```bash
+./tools/screeny-mp4 capture.webm sharepoint-ready.mp4
+```
+
+The converter requires `ffmpeg` with the `libx264` and AAC encoders. It
+preserves the source resolution, normalizes video to 30 fps, uses the `fast`
+x264 preset with CRF 21, converts audio to 128 Kbps AAC when present, and writes
+web-optimized `faststart` metadata. Existing output files are never overwritten.
+
+Show command help:
+
+```bash
+./tools/screeny-mp4 --help
+```
+
+Run the integration checks with an `ffmpeg` installation that also provides
+`ffprobe`, the VP9 encoder, and the Opus encoder:
+
+```bash
+./tests/screeny-mp4.integration.sh
+```
+
 ## Manual Checks
 
 Because browser capture requires user gestures and Chrome permission UI, verify manually in Chrome:
